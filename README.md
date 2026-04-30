@@ -4,73 +4,66 @@ SlapPaper 是一个极简的 macOS 托盘工具。
 
 它会在你切回桌面时，随机生成一张黑底白字的“打脸壁纸”，用一句短文案把你从收集癖和伪勤奋里拽回来。
 
-## v1.3
+## v1.3.1 
 
-- 平台定位收敛为 `macOS only`
-- 文案加载失败时使用内置兜底，不再静默崩掉后台线程
-- 壁纸尺寸改为跟随主屏幕分辨率
-- 文案换行改为平衡排版，避免孤字和标点单独落行
-- 自动触发改为 `Finder 激活即换壁纸`
-- 前台监听改为 `NSWorkspace` 事件驱动，不再依赖轮询
-- 项目结构拆分为 `app / tray / listener / generator / editor / store / state / config`
-- 菜单栏图标点击后会弹出一个原生 `AppKit` 文案管理面板
-- 支持直接在应用内增删改文案，并即时影响后续生成结果
-- 用户文案库持久化到 `~/Library/Application Support/SlapPaper/motto.json`
-- 文案库 JSON 损坏时，编辑器会报错而不是把默认文案覆盖回去
+*   **平台定位**：收敛为 `macOS only`。
+*   **高保真 UI**：采用原生的毛玻璃材质 (`Vibrancy`)，支持系统级深色/浅色模式自适应。
+*   **开机自启**：新增“开机自动运行”选项，支持在应用内直接管理 macOS 登录项。
+*   **标准存储**：数据存储路径迁移至标准 macOS 应用目录 `~/Library/Application Support/SlapPaper/`。
+*   **健壮性**：
+    *   日志自动截断（512KB），防止占用过多磁盘空间。
+    *   文案加载失败时使用内置兜底，不再崩溃。
+    *   修复了编辑器模式下的全局事件监听器泄露问题。
+*   **排版优化**：壁纸尺寸跟随主屏幕分辨率，文案自动平衡换行，避免孤字落行。
 
 ## 运行
 
 ```bash
+# 克隆仓库
+git clone https://github.com/czdtech/SlapPaper.git
+cd SlapPaper
+
+# 创建并激活虚拟环境
 python3 -m venv .venv
 source .venv/bin/activate
+
+# 安装依赖
 pip install -r requirements.txt
+
+# 运行程序
 python generator.py
 ```
 
 启动后会出现菜单栏图标：
-
-- 点击图标会弹出文案管理面板
-- 面板顶部可以新增文案
-- 面板列表里每条文案都支持 `编辑 / 删除`
-- 面板底部保留 `刷新壁纸` 和 `退出`
-
-自动触发规则：
-
-- 只有在应用启动后，Finder 被激活时才会自动换壁纸
-- 启动时如果前台刚好就是 Finder，不会立即自动换
-- 自动触发有一个很短的内部防抖，用来避免系统重复通知
+- 点击图标（"SP" 标志）弹出高保真管理面板。
+- 支持在面板内直接新增、编辑、删除文案。
+- 勾选“登录时自动启动”可实现开机自启。
 
 ## 打包
 
 ```bash
 pyinstaller SlapPaper.spec
 ```
-
 产物会出现在 `dist/SlapPaper.app`。
 
 ## 自定义文案
 
 你可以直接在面板里管理文案，也可以手动编辑用户目录里的文案库：
-
-```bash
-~/Library/Application\ Support/SlapPaper/motto.json
-```
+`~/Library/Application Support/SlapPaper/motto.json`
 
 首次运行、或者用户文案库不存在时，程序会从应用内置的 `motto.json` 读取初始文案。
 
-文件格式示例：
+## 开发与测试
 
-```json
-[
-  "收藏了不代表学会了，那只是你逃避思考的避难所。",
-  "你的收藏夹是知识的坟场，不是进化的阶梯。"
-]
+项目拥有完善的测试覆盖：
+```bash
+python3 -m unittest discover tests
 ```
 
-如果用户文案库缺失，程序会自动回退到内置文案集。
+## 技术架构
 
-如果用户文案库格式损坏：
-
-- 壁纸生成会临时回退到内置文案集，避免应用失效
-- 编辑器不会拿默认文案覆盖你的坏文件
-- 修好 JSON 后，重新打开面板或重启应用即可继续使用
+- **语言**：Python 3.13
+- **框架**：PyObjC (AppKit / Foundation)
+- **监听**：`NSWorkspace` 事件驱动
+- **渲染**：`NSBitmapImageRep` 原生像素级绘制
+- **版本控制**：Git

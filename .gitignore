@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.venv/
+
+# PyInstaller
+build/
+dist/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Serena / Superpowers (local tooling)
+.serena/
+.superpowers/
+
+# Generated wallpaper samples
+rocket_launch.png
+slappaper_*.png

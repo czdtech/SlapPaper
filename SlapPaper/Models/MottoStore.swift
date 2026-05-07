@@ -1,5 +1,11 @@
 import Foundation
 
+struct IndexedMotto: Identifiable, Equatable {
+    let index: Int
+    let text: String
+    var id: String { "\(index):\(text)" }
+}
+
 enum MottoStoreError: LocalizedError {
     case missingFile(URL)
     case invalidJSON(URL)
@@ -16,10 +22,14 @@ enum MottoStoreError: LocalizedError {
     }
 }
 
-/// Persists mottos to the same path and format as the Python app: `~/Library/Application Support/SlapPaper/motto.json`
+@MainActor
 final class MottoStore: ObservableObject {
     @Published private(set) var mottos: [String] = []
     @Published var loadErrorMessage: String?
+
+    var indexedMottos: [IndexedMotto] {
+        mottos.enumerated().map { IndexedMotto(index: $0.offset, text: $0.element) }
+    }
 
     private let userURL: URL
     private let bundledURL: URL?
@@ -38,7 +48,6 @@ final class MottoStore: ObservableObject {
         reloadFromDisk()
     }
 
-    /// Mottos for wallpaper generation (runtime): user file → bundled → built-in; invalid user file falls back without overwriting.
     func runtimeMottos() -> [String] {
         let loaded: [String]
         do {
@@ -49,7 +58,6 @@ final class MottoStore: ObservableObject {
         return loaded.isEmpty ? Self.builtInMottos : loaded
     }
 
-    /// Loads for editor UI; throws on corrupt user file (matches Python editor behavior).
     func loadMottosForEditor() throws -> [String] {
         if FileManager.default.fileExists(atPath: userURL.path) {
             return try readMottos(from: userURL)

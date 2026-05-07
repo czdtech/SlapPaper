@@ -51,8 +51,8 @@ struct MottoEditorView: View {
                     .padding(.vertical, 32)
                     .listRowBackground(Color.clear)
                 } else {
-                    ForEach(Array(store.mottos.enumerated()), id: \.offset) { index, text in
-                        mottoRow(index: index, text: text)
+                    ForEach(store.indexedMottos) { item in
+                        mottoRow(index: item.index, text: item.text)
                     }
                 }
             }

@@ -1,7 +1,6 @@
 import AppKit
 import Foundation
 
-/// Balanced line breaking (dynamic programming), ported from Python `slappaper/generator.py`.
 enum TextLayout {
 
     static func wrapTextLines(
@@ -15,7 +14,16 @@ enum TextLayout {
 
         let breakPoints = breakIndices(for: String(cleaned))
 
+        struct CacheKey: Hashable {
+            let startIndex: Int
+            let linesLeft: Int
+        }
+        var memo: [CacheKey: (CGFloat, [String])?] = [:]
+
         func solve(startIndex: Int, linesLeft: Int) -> (CGFloat, [String])? {
+            let key = CacheKey(startIndex: startIndex, linesLeft: linesLeft)
+            if let cached = memo[key] { return cached }
+
             var best: (CGFloat, [String])?
 
             for endIndex in breakPoints where endIndex > startIndex {
@@ -44,6 +52,7 @@ enum TextLayout {
                 }
             }
 
+            memo[key] = best
             return best
         }
 

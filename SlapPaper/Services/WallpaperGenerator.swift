@@ -1,31 +1,26 @@
 import AppKit
 import Foundation
 
-final class WallpaperGenerator: @unchecked Sendable {
+final class WallpaperGenerator {
 
     private var cachedFont: NSFont?
     private var cachedFontSize: CGFloat = 0
-    private var cachedMottos: [String] = []
 
-    func loadResources(mottos: [String], dimensions: (Int, Int)? = nil, force: Bool = false) {
-        let (_, h) = dimensions ?? Self.targetDimensions()
-        let targetSize = Self.fontSize(forHeight: h)
+    func loadResources(mottos: [String], dimensions: (Int, Int), force: Bool = false) {
+        let targetSize = Self.fontSize(forHeight: dimensions.1)
 
         if !force,
            cachedFont != nil,
-           !cachedMottos.isEmpty,
            cachedFontSize == targetSize {
             return
         }
 
         AppLog.append("Loading resources...")
-        cachedMottos = mottos
         cachedFontSize = targetSize
         cachedFont = Self.loadFont(size: targetSize)
     }
 
-    /// - Parameter dimensions: Pass screen size from the main thread; if `nil`, reads `NSScreen` on the current thread.
-    func generate(usingMottos mottos: [String], dimensions: (Int, Int)? = nil) throws -> String {
+    func generate(usingMottos mottos: [String], dimensions: (Int, Int)) throws -> String {
         guard !mottos.isEmpty else {
             throw NSError(domain: "SlapPaper", code: 2, userInfo: [NSLocalizedDescriptionKey: "No mottos available for rendering."])
         }
@@ -35,7 +30,7 @@ final class WallpaperGenerator: @unchecked Sendable {
             throw NSError(domain: "SlapPaper", code: 3, userInfo: [NSLocalizedDescriptionKey: "Font unavailable."])
         }
 
-        let (width, height) = dimensions ?? Self.targetDimensions()
+        let (width, height) = dimensions
         let text = mottos.randomElement()!
         try Self.cleanupPreviousWallpapers()
 
@@ -47,7 +42,6 @@ final class WallpaperGenerator: @unchecked Sendable {
         let wrapped = lines.joined(separator: "\n")
 
         try renderWallpaper(text: wrapped, width: width, height: height, font: font, to: outputURL)
-        try setWallpaper(url: outputURL)
 
         AppLog.append("Wallpaper ready: \(String(text.prefix(24)))...")
         return outputURL.path
@@ -146,7 +140,8 @@ final class WallpaperGenerator: @unchecked Sendable {
         try data.write(to: url, options: .atomic)
     }
 
-    private func setWallpaper(url: URL) throws {
+    @MainActor
+    static func applyWallpaper(url: URL) throws {
         let screens = NSScreen.screens
         guard !screens.isEmpty else {
             throw NSError(domain: "SlapPaper", code: 7, userInfo: [NSLocalizedDescriptionKey: "No screens detected; cannot set wallpaper."])

@@ -15,7 +15,7 @@ enum Constants {
     static let fontNames = ["PingFangSC-Regular", "STHeitiSC-Medium"]
 
     static let leadingPunctuation: Set<Character> = [
-        "，", "。", "！", "？", "；", "：", "、", "”", "’", "）", "》", "】",
+        "，", "。", "！", "？", "；", "：", "、", "\u{201D}", "\u{2019}", "）", "》", "】",
         ",", ".", "!", "?", ";", ":", ")", "]", "}",
     ]
     static let wordJoiners: Set<Character> = ["-", "_", ".", "/", "+", "#"]
@@ -45,34 +45,40 @@ enum Constants {
 }
 
 enum AppLog {
+    private static let queue = DispatchQueue(label: "com.slappaper.log")
+
+    private static let formatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
+        return f
+    }()
+
     static func append(_ message: String) {
-        let dir = Constants.storageURL
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let path = Constants.logFileURL.path
-        if FileManager.default.fileExists(atPath: path),
-           let attrs = try? FileManager.default.attributesOfItem(atPath: path),
-           let size = attrs[.size] as? Int64,
-           size > Constants.logMaxBytes {
-            trimLog(at: path, keepLast: Constants.logMaxBytes / 2)
-        }
-        let line = "[\(Self.timestamp())] \(message)\n"
-        if let data = line.data(using: .utf8) {
+        let line = "[\(formatter.string(from: Date()))] \(message)\n"
+        guard let data = line.data(using: .utf8) else { return }
+
+        queue.async {
+            let dir = Constants.storageURL
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let path = Constants.logFileURL.path
+
+            if FileManager.default.fileExists(atPath: path),
+               let attrs = try? FileManager.default.attributesOfItem(atPath: path),
+               let size = attrs[.size] as? Int64,
+               size > Constants.logMaxBytes {
+                trimLog(at: path, keepLast: Constants.logMaxBytes / 2)
+            }
+
             if FileManager.default.fileExists(atPath: path) {
                 if let handle = FileHandle(forWritingAtPath: path) {
                     defer { try? handle.close() }
-                    try? handle.seekToEnd()
+                    _ = try? handle.seekToEnd()
                     try? handle.write(contentsOf: data)
                 }
             } else {
                 try? data.write(to: URL(fileURLWithPath: path))
             }
         }
-    }
-
-    private static func timestamp() -> String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm:ss"
-        return f.string(from: Date())
     }
 
     private static func trimLog(at path: String, keepLast: Int) {

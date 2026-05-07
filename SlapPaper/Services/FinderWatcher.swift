@@ -16,10 +16,7 @@ final class FinderWatcher {
             object: nil,
             queue: .main
         ) { notification in
-            guard
-                let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-                app.bundleIdentifier == Constants.finderBundleID
-            else { return }
+            guard Self.isFinderActivation(notification.userInfo) else { return }
             onFinderActivated()
         }
     }
@@ -29,5 +26,12 @@ final class FinderWatcher {
             notificationCenter.removeObserver(obs)
             observation = nil
         }
+    }
+
+    static func isFinderActivation(_ userInfo: [AnyHashable: Any]?) -> Bool {
+        guard let app = userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else {
+            return false
+        }
+        return app.bundleIdentifier == Constants.finderBundleID
     }
 }

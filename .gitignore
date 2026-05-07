@@ -1,13 +1,8 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-*.egg
-.venv/
-
-# PyInstaller
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
 build/
-dist/
 
 # macOS
 .DS_Store
@@ -15,18 +10,10 @@ dist/
 # IDE
 .vscode/
 .idea/
-**/xcuserdata/
-*.xcuserstate
 
-# Testing
-.pytest_cache/
-htmlcov/
-.coverage
+# Generated wallpapers
+slappaper_*.png
 
 # Serena / Superpowers (local tooling)
 .serena/
 .superpowers/
-
-# Generated wallpaper samples
-rocket_launch.png
-slappaper_*.png

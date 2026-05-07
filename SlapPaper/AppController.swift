@@ -1,5 +1,4 @@
 import AppKit
-import Combine
 import Foundation
 import ServiceManagement
 import SwiftUI
@@ -101,13 +100,23 @@ final class AppController: ObservableObject {
         let dims = WallpaperGenerator.targetDimensions()
         let st = state
 
-        await Task.detached(priority: .userInitiated) {
+        let path: String? = await Task.detached(priority: .userInitiated) {
             do {
-                _ = try WallpaperGenerator().generate(usingMottos: mottos, dimensions: dims)
+                return try WallpaperGenerator().generate(usingMottos: mottos, dimensions: dims)
             } catch {
                 AppLog.append("\(source.rawValue) generation failed: \(error.localizedDescription)")
+                return nil
             }
-            await st.finishGeneration()
         }.value
+
+        if let path {
+            do {
+                try WallpaperGenerator.applyWallpaper(url: URL(fileURLWithPath: path))
+            } catch {
+                AppLog.append("\(source.rawValue) set wallpaper failed: \(error.localizedDescription)")
+            }
+        }
+
+        await st.finishGeneration()
     }
 }

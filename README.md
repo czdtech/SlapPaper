@@ -39,6 +39,10 @@ python generator.py
 - 支持在面板内直接新增、编辑、删除文案。
 - 勾选“登录时自动启动”可实现开机自启。
 
+## Swift 原生版（macOS 13+）
+
+仓库内提供 Swift + SwiftUI 实现，与 Python 版共用 `~/Library/Application Support/SlapPaper/` 下的 `motto.json` 与壁纸文件。说明与构建步骤见 [macOS/SlapPaper/README.md](macOS/SlapPaper/README.md)。
+
 ## 打包
 
 ```bash
@@ -62,8 +66,8 @@ python3 -m unittest discover tests
 
 ## 技术架构
 
-- **语言**：Python 3.13
-- **框架**：PyObjC (AppKit / Foundation)
+- **Python 版**：Python 3.13 + PyObjC (AppKit / Foundation)
+- **Swift 版**：Swift 5 + SwiftUI + `MenuBarExtra`（见 `macOS/SlapPaper/`）
 - **监听**：`NSWorkspace` 事件驱动
 - **渲染**：`NSBitmapImageRep` 原生像素级绘制
 - **版本控制**：Git
